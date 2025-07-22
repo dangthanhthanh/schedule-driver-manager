@@ -22,7 +22,7 @@
     </div>
 
     <div class="d-flex gap-2">
-    <button class="btn btn-primary">{{ isset($location) ? 'Cập nhật' : 'Thêm mới' }}</button>
+    <button class="btn btn-primary submit-once">{{ isset($location) ? 'Cập nhật' : 'Thêm mới' }}</button>
     <a href="{{ route('locations.index') }}" class="btn btn-secondary">Hủy</a>
     </div>
   </form>

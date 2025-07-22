@@ -4,26 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Ghi nhận trạng thái của tài xế theo ngày/ca.
- *
- * @property int $id
- * @property int $driver_id
- * @property int $status_id
- * @property \Illuminate\Support\Carbon $date
- * @property float $time_unit   // 1 = nguyên ngày; 0.5 = nửa ngày
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Driver $driver
- * @property-read \App\Models\DriverStatus $status
- */
 class DriverStatusLog extends Model
 {
     use HasFactory;
 
-    protected $table = 'driver_status_logs'; // MIGRATION DÙNG SINGULAR
+    protected $table = 'driver_status_logs';
 
     protected $fillable = [
         'driver_id',
@@ -37,19 +24,19 @@ class DriverStatusLog extends Model
         'time_unit' => 'float',
     ];
 
-    /* ---------------- Relations ---------------- */
+    // Relationships
 
-    public function driver()
+    public function driver(): BelongsTo
     {
-        return $this->belongsTo(Driver::class);
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
-    public function status()
+    public function status(): BelongsTo
     {
         return $this->belongsTo(DriverStatus::class, 'status_id');
     }
 
-    /* ---------------- Scopes ---------------- */
+    // Scopes
 
     public function scopeOnDate($query, $date)
     {

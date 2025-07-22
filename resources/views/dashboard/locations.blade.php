@@ -78,18 +78,18 @@
       renderRow: function (item) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.name ?? ''}</td>
-            <td>${item.address ?? '—'}</td>
-            <td>${item.link ? '<a href="' + item.link + '" target="_blank" rel="noopener">Mở</a>' : '—'}</td>
-            <td class="text-end">
-              <a href="{{ url('locations') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
-              <form action="{{ url('locations') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa địa điểm?')">
-                @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
-              </form>
-            </td>
-          `;
+        <td>${item.id}</td>
+        <td>${item.name ?? ''}</td>
+        <td>${item.address ?? '—'}</td>
+        <td>${item.link ? '<a href="' + item.link + '" target="_blank" rel="noopener">Mở</a>' : '—'}</td>
+        <td class="text-end">
+          <a href="{{ url('locations') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
+          <form action="{{ url('locations') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa địa điểm?')">
+          @csrf @method('DELETE')
+          <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
+          </form>
+        </td>
+        `;
         return tr;
       }
       });

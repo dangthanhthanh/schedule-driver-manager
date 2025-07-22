@@ -4,20 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Model trung gian cho nhiều xe/driver trong một lịch trình.
+ * App\Models\Schedule
  *
  * @property int $id
  * @property int $schedule_id
- * @property int|null $truck_id
- * @property int|null $driver_id
- * @property int|null $from_location_id
- * @property int|null $to_location_id
+ * @property int $truck_id
+ * @property int $driver_id
+ * @property int $from_location_id
+ * @property int $to_location_id
  * @property string|null $assistant
  * @property string|null $cargo_desc
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ScheduleTruck extends Model
 {
@@ -35,29 +34,29 @@ class ScheduleTruck extends Model
         'cargo_desc',
     ];
 
-    /* ---------------- Relationships ---------------- */
+    // Relationships
 
-    public function schedule()
+    public function schedule(): BelongsTo
     {
-        return $this->belongsTo(Schedule::class);
+        return $this->belongsTo(Schedule::class, 'schedule_id');
     }
 
-    public function truck()
+    public function truck(): BelongsTo
     {
-        return $this->belongsTo(Truck::class);
+        return $this->belongsTo(Truck::class, 'truck_id');
     }
 
-    public function driver()
+    public function driver(): BelongsTo
     {
-        return $this->belongsTo(Driver::class);
+        return $this->belongsTo(Driver::class, 'driver_id');
     }
 
-    public function fromLocation()
+    public function fromLocation(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'from_location_id');
     }
 
-    public function toLocation()
+    public function toLocation(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'to_location_id');
     }

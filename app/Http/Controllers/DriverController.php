@@ -18,16 +18,14 @@ class DriverController extends Controller
         return $request->ajax() || $request->wantsJson() || $request->is('api/*');
     }
 
-    /* =========================================================
-     | Resource: INDEX
-     * ========================================================= */
+    /**
+     * List drivers with optional filters.
+     */
     public function index(Request $request)
     {
         $query = Driver::with('truck');
-
-        // Optional filters
         if ($request->filled('q')) {
-            $q =  $request->input('q');
+            $q = $request->input('q');
             $query->where(function ($sub) use ($q) {
                 $sub->where('name', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%");
@@ -42,9 +40,7 @@ class DriverController extends Controller
 
         $drivers = $query->paginate(25)->withQueryString();
 
-        if ($this->wantsJson($request)) {
-            return $drivers;
-        }
+        if ($this->wantsJson($request)) return $drivers;
 
         return view('dashboard.drivers', [
             'title'   => 'Tài xế',
@@ -53,9 +49,9 @@ class DriverController extends Controller
         ]);
     }
 
-    /* =========================================================
-     | Resource: CREATE (form)
-     * ========================================================= */
+    /**
+     * Form create driver.
+     */
     public function create()
     {
         return view('dashboard.drivers.form', [
@@ -64,9 +60,9 @@ class DriverController extends Controller
         ]);
     }
 
-    /* =========================================================
-     | Resource: STORE
-     * ========================================================= */
+    /**
+     * Store new driver.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -75,37 +71,27 @@ class DriverController extends Controller
             'truck_id'       => 'nullable|exists:trucks,id',
             'is_main_driver' => 'boolean',
         ]);
-
-        // Checkbox absent -> false
         $data['is_main_driver'] = $request->boolean('is_main_driver');
-
         $driver = Driver::create($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'Driver created.', 'driver' => $driver], 201);
-        }
+        if ($this->wantsJson($request)) return response()->json(['message' => 'Driver created.', 'driver' => $driver], 201);
 
         return redirect()->route('drivers.index')->with('success', 'Tài xế đã được thêm.');
     }
 
-    /* =========================================================
-     | Resource: SHOW
-     * ========================================================= */
+    /**
+     * Show driver detail (redirect to log).
+     */
     public function show(Request $request, Driver $driver)
     {
         $driver->load('truck', 'statusLogs.status');
-
-        if ($this->wantsJson($request)) {
-            return $driver;
-        }
-
-        // Web: chuyển sang trang log trạng thái tài xế (theo driver)
+        if ($this->wantsJson($request)) return $driver;
         return redirect()->route('drivers.status-log', $driver);
     }
 
-    /* =========================================================
-     | Resource: EDIT (form)
-     * ========================================================= */
+    /**
+     * Form edit driver.
+     */
     public function edit(Driver $driver)
     {
         return view('dashboard.drivers.form', [
@@ -115,9 +101,9 @@ class DriverController extends Controller
         ]);
     }
 
-    /* =========================================================
-     | Resource: UPDATE
-     * ========================================================= */
+    /**
+     * Update driver info.
+     */
     public function update(Request $request, Driver $driver)
     {
         $data = $request->validate([
@@ -126,71 +112,46 @@ class DriverController extends Controller
             'truck_id'       => 'nullable|exists:trucks,id',
             'is_main_driver' => 'boolean',
         ]);
-
         $data['is_main_driver'] = $request->boolean('is_main_driver');
-
         $driver->update($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'Driver updated.', 'driver' => $driver]);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message' => 'Driver updated.', 'driver' => $driver]);
         return redirect()->route('drivers.index')->with('success', 'Cập nhật tài xế thành công.');
     }
 
-    /* =========================================================
-     | Resource: DESTROY
-     * ========================================================= */
+    /**
+     * Delete driver.
+     */
     public function destroy(Request $request, Driver $driver)
     {
         $driver->delete();
-
-        if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'Driver deleted.']);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message' => 'Driver deleted.']);
         return redirect()->route('drivers.index')->with('success', 'Đã xóa tài xế.');
     }
 
-    /* =========================================================
-     | Lookup: Driver Status danh mục
-     * ========================================================= */
+    /**
+     * Get driver status lookup (for AJAX).
+     */
     public function getAvailableStatuses(Request $request)
     {
         $statuses = DriverStatus::orderBy('name')->get();
-
-        if ($this->wantsJson($request)) {
-            return $statuses;
-        }
-
-        // Web use-case: trả view JSON embed
+        if ($this->wantsJson($request)) return $statuses;
         return response()->json($statuses);
     }
 
-    /* =========================================================
-     | LOG: per-driver status log (GET)
-     * Route: drivers/{driver}/status-log
-     * Optional filters: date_from, date_to, status_id
-     * ========================================================= */
+    /**
+     * Get driver status logs (filter by date/status).
+     */
     public function getStatusLog(Request $request, Driver $driver)
     {
         $query = $driver->statusLogs()->with('status')->orderByDesc('date');
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', $request->input('date_from'));
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', $request->input('date_to'));
-        }
-        if ($request->filled('status_id')) {
-            $query->where('status_id', $request->input('status_id'));
-        }
+        if ($request->filled('date_from')) $query->whereDate('date', '>=', $request->input('date_from'));
+        if ($request->filled('date_to'))   $query->whereDate('date', '<=', $request->input('date_to'));
+        if ($request->filled('status_id')) $query->where('status_id', $request->input('status_id'));
 
         $logs = $query->paginate(50)->withQueryString();
 
-        if ($this->wantsJson($request)) {
-            return $logs;
-        }
+        if ($this->wantsJson($request)) return $logs;
 
         return view('dashboard.driver_status_log', [
             'title'    => "Trạng thái: {$driver->name}",
@@ -200,9 +161,9 @@ class DriverController extends Controller
         ]);
     }
 
-    /* =========================================================
-     | LOG: add driver status (POST)
-     * ========================================================= */
+    /**
+     * Add a driver status log.
+     */
     public function updateStatusLog(Request $request, Driver $driver)
     {
         $data = $request->validate([
@@ -210,13 +171,9 @@ class DriverController extends Controller
             'date'      => 'required|date',
             'time_unit' => 'required|numeric|min:0.5|max:1',
         ]);
-
         $log = $driver->statusLogs()->create($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message' => 'Driver status logged.', 'log' => $log->load('status')]);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message' => 'Driver status logged.', 'log' => $log->load('status')]);
         return back()->with('success', 'Đã ghi trạng thái tài xế.');
     }
 }

@@ -16,16 +16,16 @@ class ScheduleController extends Controller
         return $r->wantsJson() || $r->is('api/*');
     }
 
-    /* INDEX */
+    /**
+     * List schedules.
+     */
     public function index(Request $request)
     {
         $schedules = Schedule::withCount('scheduleTrucks')
             ->orderByDesc('date')
             ->paginate(25);
 
-        if ($this->wantsJson($request)) {
-            return $schedules;
-        }
+        if ($this->wantsJson($request)) return $schedules;
 
         return view('dashboard.schedules', [
             'title'     => 'Lịch trình',
@@ -33,7 +33,9 @@ class ScheduleController extends Controller
         ]);
     }
 
-    /* CREATE */
+    /**
+     * Form create schedule.
+     */
     public function create()
     {
         return view('dashboard.schedules.form', [
@@ -44,7 +46,9 @@ class ScheduleController extends Controller
         ]);
     }
 
-    /* STORE */
+    /**
+     * Store new schedule.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -52,17 +56,16 @@ class ScheduleController extends Controller
             'date'         => 'required|date',
             'general_note' => 'nullable|string',
         ]);
-
         $schedule = Schedule::create($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message'=>'Schedule created','schedule'=>$schedule],201);
-        }
+        if ($this->wantsJson($request)) return response()->json(['message'=>'Schedule created','schedule'=>$schedule],201);
 
         return redirect()->route('schedules.edit',$schedule)->with('success','Lịch trình đã được thêm.');
     }
 
-    /* SHOW */
+    /**
+     * Show schedule (redirect to edit).
+     */
     public function show(Request $request, Schedule $schedule)
     {
         $schedule->load([
@@ -72,15 +75,14 @@ class ScheduleController extends Controller
             'scheduleTrucks.toLocation',
         ]);
 
-        if ($this->wantsJson($request)) {
-            return $schedule;
-        }
+        if ($this->wantsJson($request)) return $schedule;
 
-        // web: chuyển về edit page (hiển thị chi tiết + form trucks)
         return redirect()->route('schedules.edit',$schedule);
     }
 
-    /* EDIT */
+    /**
+     * Form edit schedule.
+     */
     public function edit(Schedule $schedule)
     {
         return view('dashboard.schedules.form', [
@@ -92,7 +94,9 @@ class ScheduleController extends Controller
         ]);
     }
 
-    /* UPDATE */
+    /**
+     * Update schedule.
+     */
     public function update(Request $request, Schedule $schedule)
     {
         $data = $request->validate([
@@ -100,46 +104,39 @@ class ScheduleController extends Controller
             'date'         => 'required|date',
             'general_note' => 'nullable|string',
         ]);
-
         $schedule->update($data);
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message'=>'Schedule updated','schedule'=>$schedule]);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message'=>'Schedule updated','schedule'=>$schedule]);
         return redirect()->route('schedules.edit',$schedule)->with('success','Cập nhật lịch trình thành công.');
     }
 
-    /* DESTROY */
+    /**
+     * Delete schedule.
+     */
     public function destroy(Request $request, Schedule $schedule)
     {
         $schedule->delete();
 
-        if ($this->wantsJson($request)) {
-            return response()->json(['message'=>'Schedule deleted']);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message'=>'Schedule deleted']);
         return redirect()->route('schedules.index')->with('success','Đã xóa lịch trình.');
     }
 
-    /* =================================================
-     | ScheduleTrucks management
-     * ================================================= */
-
+    /**
+     * Get trucks in schedule (AJAX).
+     */
     public function getScheduleTrucks(Request $request, Schedule $schedule)
     {
         $items = $schedule->scheduleTrucks()
             ->with(['truck','driver','fromLocation','toLocation'])
             ->get();
 
-        if ($this->wantsJson($request)) {
-            return $items;
-        }
-
-        // Web: render partial table? Tạm quay lại edit page
+        if ($this->wantsJson($request)) return $items;
         return redirect()->route('schedules.edit',$schedule);
     }
 
+    /**
+     * Add truck to schedule.
+     */
     public function addTruckToSchedule(Request $request, Schedule $schedule)
     {
         $data = $request->validate([
@@ -150,7 +147,6 @@ class ScheduleController extends Controller
             'assistant'        => 'nullable|string|max:255',
             'cargo_desc'       => 'nullable|string',
         ]);
-
         $item = $schedule->scheduleTrucks()->create($data);
 
         if ($this->wantsJson($request)) {
@@ -159,10 +155,12 @@ class ScheduleController extends Controller
                 'item'=>$item->load(['truck','driver','fromLocation','toLocation']),
             ],201);
         }
-
         return back()->with('success','Đã thêm xe vào lịch.');
     }
 
+    /**
+     * Update truck info in schedule.
+     */
     public function updateTruckInSchedule(Request $request, ScheduleTruck $scheduleTruck)
     {
         $data = $request->validate([
@@ -173,7 +171,6 @@ class ScheduleController extends Controller
             'assistant'        => 'nullable|string|max:255',
             'cargo_desc'       => 'nullable|string',
         ]);
-
         $scheduleTruck->update($data);
 
         if ($this->wantsJson($request)) {
@@ -182,18 +179,16 @@ class ScheduleController extends Controller
                 'item'=>$scheduleTruck->load(['truck','driver','fromLocation','toLocation']),
             ]);
         }
-
         return back()->with('success','Đã cập nhật xe trong lịch.');
     }
 
+    /**
+     * Remove truck from schedule.
+     */
     public function removeTruckFromSchedule(Request $request, ScheduleTruck $scheduleTruck)
     {
         $scheduleTruck->delete();
-
-        if ($this->wantsJson($request)) {
-            return response()->json(['message'=>'Schedule truck deleted']);
-        }
-
+        if ($this->wantsJson($request)) return response()->json(['message'=>'Schedule truck deleted']);
         return back()->with('success','Đã xóa xe khỏi lịch.');
     }
 }

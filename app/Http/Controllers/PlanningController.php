@@ -15,36 +15,22 @@ use App\Models\{
 
 class PlanningController extends Controller
 {
-    /* ============================================
-     | Helpers
-     * ============================================ */
-
     protected function wantsJson(Request $r): bool
     {
         return $r->ajax() || $r->wantsJson();
     }
 
-    /**
-     * Chuẩn hoá input khoảng ngày.
-     */
     protected function resolveDateRange(Request $r): array
     {
-        $start = $r->input('start'); // YYYY-MM-DD
-        $days  = (int)($r->input('days', 7)); // default 7 ngày
-
-        if (!$start) {
-            $start = now()->toDateString();
-        }
+        $start = $r->input('start');
+        $days  = (int)($r->input('days', 7));
+        if (!$start) $start = now()->toDateString();
 
         $startDate = Carbon::parse($start)->startOfDay();
         $endDate   = (clone $startDate)->addDays($days - 1)->endOfDay();
-
         return [$startDate, $endDate];
     }
 
-    /**
-     * Tạo danh sách ngày CarbonPeriod.
-     */
     protected function makeDays(Carbon $start, Carbon $end): array
     {
         $days = [];
@@ -54,10 +40,6 @@ class PlanningController extends Controller
         return $days;
     }
 
-    /**
-     * Lấy mapping ScheduleTruck theo (driver_id, date) hoặc (truck_id, date).
-     * mode = 'driver' | 'truck'
-     */
     protected function fetchCellMap(string $mode, array $ids, Carbon $start, Carbon $end): array
     {
         $rel = ScheduleTruck::with(['schedule','truck','driver','toLocation'])
@@ -73,7 +55,9 @@ class PlanningController extends Controller
 
         $map = []; // [id][Y-m-d] => ScheduleTruck
         foreach ($rows as $st) {
-            $date = optional($st->schedule)->date?->format('Y-m-d');
+            // Avoid IDE warning by breaking up the optional chain
+            $schedule = $st->schedule;
+            $date = ($schedule && $schedule->date) ? $schedule->date->format('Y-m-d') : null;
             if (!$date) continue;
             $key = $mode === 'driver' ? $st->driver_id : $st->truck_id;
             if (!$key) continue;
@@ -82,9 +66,6 @@ class PlanningController extends Controller
         return $map;
     }
 
-    /**
-     * Đảm bảo có schedule cho ngày.
-     */
     protected function ensureScheduleForDate(string $date): Schedule
     {
         return Schedule::firstOrCreate(
@@ -93,9 +74,6 @@ class PlanningController extends Controller
         );
     }
 
-    /* ============================================
-     | GRID: Drivers
-     * ============================================ */
     public function driversGrid(Request $request)
     {
         [$start,$end] = $this->resolveDateRange($request);
@@ -103,7 +81,6 @@ class PlanningController extends Controller
 
         $drivers = Driver::with('truck')->orderBy('name')->get();
         $driverIds = $drivers->pluck('id')->all();
-
         $cellMap = $this->fetchCellMap('driver', $driverIds, $start, $end);
 
         if ($this->wantsJson($request)) {
@@ -121,9 +98,6 @@ class PlanningController extends Controller
         ]);
     }
 
-    /**
-     * Lưu / cập nhật cell theo tài xế + ngày.
-     */
     public function saveDriverCell(Request $request)
     {
         $data = $request->validate([
@@ -135,9 +109,8 @@ class PlanningController extends Controller
             'status'     => 'nullable|string|max:100',
             'cargo_desc' => 'nullable|string',
             'assistant'  => 'nullable|string|max:255',
-            'schedule_truck_id' => 'nullable|exists:schedule_trucks,id', // editing
+            'schedule_truck_id' => 'nullable|exists:schedule_trucks,id',
         ]);
-
         $schedule = $this->ensureScheduleForDate($data['date']);
 
         if (!empty($data['schedule_truck_id'])) {
@@ -167,9 +140,6 @@ class PlanningController extends Controller
         ]);
     }
 
-    /**
-     * Xoá cell (tức xoá schedule_truck record).
-     */
     public function deleteDriverCell(Request $request)
     {
         $id = $request->input('schedule_truck_id');
@@ -179,9 +149,6 @@ class PlanningController extends Controller
         return response()->json(['message'=>'Đã xoá lịch.']);
     }
 
-    /* ============================================
-     | GRID: Trucks
-     * ============================================ */
     public function trucksGrid(Request $request)
     {
         [$start,$end] = $this->resolveDateRange($request);
@@ -189,7 +156,6 @@ class PlanningController extends Controller
 
         $trucks   = Truck::orderBy('truck_name')->get();
         $truckIds = $trucks->pluck('id')->all();
-
         $cellMap = $this->fetchCellMap('truck', $truckIds, $start, $end);
 
         if ($this->wantsJson($request)) {
@@ -220,7 +186,6 @@ class PlanningController extends Controller
             'assistant'  => 'nullable|string|max:255',
             'schedule_truck_id' => 'nullable|exists:schedule_trucks,id',
         ]);
-
         $schedule = $this->ensureScheduleForDate($data['date']);
 
         if (!empty($data['schedule_truck_id'])) {
@@ -259,12 +224,8 @@ class PlanningController extends Controller
         return response()->json(['message'=>'Đã xoá lịch.']);
     }
 
-    /* ============================================
-     | GRID: Transport (driver-focused + cargo)
-     * ============================================ */
     public function transportGrid(Request $request)
     {
-        // Transport grid = driver grid nhưng bắt buộc hiển thị thông tin cargo_desc
         [$start,$end] = $this->resolveDateRange($request);
         $days         = $this->makeDays($start,$end);
 
@@ -289,7 +250,6 @@ class PlanningController extends Controller
 
     public function saveTransportCell(Request $request)
     {
-        // alias of saveDriverCell (transport = driver-based)
         return $this->saveDriverCell($request);
     }
 
@@ -298,13 +258,8 @@ class PlanningController extends Controller
         return $this->deleteDriverCell($request);
     }
 
-    /* ============================================
-     | Payload builder
-     * ============================================ */
-
     protected function buildCargoField(array $data): ?string
     {
-        // cargo_desc in request wins; append status & time if given
         $txt = trim($data['cargo_desc'] ?? '');
         $parts = [];
         if (!empty($data['status']))     $parts[] = $data['status'];
@@ -318,7 +273,9 @@ class PlanningController extends Controller
         $st->loadMissing(['truck','driver','toLocation','schedule']);
         return [
             'id'         => $st->id,
-            'date'       => optional($st->schedule)->date?->toDateString(),
+            'date'       => $st->schedule && $st->schedule->date
+            ? $st->schedule->date->toDateString()
+            : null,
             'truck'      => $st->truck?->truck_name,
             'driver'     => $st->driver?->name,
             'location'   => $st->toLocation?->name,

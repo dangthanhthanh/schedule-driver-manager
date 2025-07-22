@@ -3,12 +3,12 @@
 @section('title', $title ?? 'Xe tải')
 
 @section('content')
-  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="m-0">Xe tải</h3>
     <a href="{{ route('trucks.create') }}" class="btn btn-primary submit-once">+ Thêm xe</a>
-  </div>
+    </div>
 
-  <form method="GET" class="row g-2 mb-3" id="truck-filter-form" data-endpoint="{{ route('trucks.index') }}">
+    <form method="GET" class="row g-2 mb-3" id="truck-filter-form" data-endpoint="{{ route('trucks.index') }}">
     <div class="col-md-4">
     <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Biển số...">
     </div>
@@ -22,37 +22,39 @@
     <div class="col-md-2 d-grid">
     <button class="btn btn-secondary">Lọc</button>
     </div>
-  </form>
+    </form>
 
-  <div class="card">
+    <div class="card">
     <div class="table-responsive">
     <table class="table table-sm table-hover align-middle mb-0" id="truck-table">
       <thead>
       <tr>
-        <th>#</th>
-        <th>Tên xe</th>
-        <th>Tải trọng</th>
-        <th>Trạng thái hiện tại</th>
-        <th>TT</th>
-        <th></th>
+      <th>#</th>
+      <th>Biển số</th>
+      <th>Tải trọng</th>
+      <th>Trạng thái hiện tại</th>
+      <th>Số sàn</th>
+      <th>TT</th>
+      <th></th>
       </tr>
       </thead>
       <tbody>
-      @foreach($trucks as $t)
+      @foreach($trucks as $id => $t)
       <tr>
-      <td>{{ $t->id }}</td>
+      <td>{{ $id + 1 }}</td>
       <td>{{ $t->truck_name }}</td>
-      <td>{{ $t->capacity ?? '—' }}</td>
+      <td>{{ $t->capacity ?? '—' }}</td> 
       <td>{{ $t->status ?? '—' }}</td>
+      <td>{{ $t->floor ?? '—' }}</td>
       <td>
       <a href="{{ route('trucks.status-log', $t) }}" class="btn btn-sm btn-outline-info">Log</a>
       </td>
       <td class="text-end">
       <a href="{{ route('trucks.edit', $t) }}" class="btn btn-sm btn-outline-warning">Sửa</a>
       <form action="{{ route('trucks.destroy', $t) }}" method="POST" class="d-inline"
-        onsubmit="return confirm('Xóa xe?')">
-        @csrf @method('DELETE')
-        <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
+      onsubmit="return confirm('Xóa xe?')">
+      @csrf @method('DELETE')
+      <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
       </form>
       </td>
       </tr>
@@ -64,13 +66,13 @@
     <div class="card-footer text-center" data-ajax-pager>
     {{ $trucks->links() }}
     </div>
-  </div>
+    </div>
 @endsection
 
 @push('scripts')
-  @include('dashboard.partials._ajax_helpers')
+    @include('dashboard.partials._ajax_helpers')
 
-  <script>
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('truck-filter-form');
     const table = document.getElementById('truck-table');
@@ -83,24 +85,25 @@
       form: form,
       container: table,
       renderRow: function (item) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.truck_name ?? ''}</td>
-            <td>${item.capacity ?? '—'}</td>
-            <td>${item.status ?? '—'}</td>
-            <td><a href="{{ url('trucks') }}/${item.id}/status-log" class="btn btn-sm btn-outline-info">Log</a></td>
-            <td class="text-end">
-              <a href="{{ url('trucks') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
-              <form action="{{ url('trucks') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa xe?')">
-                @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
-              </form>
-            </td>`;
-        return tr;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+      <td>${item.id}</td>
+      <td>${item.truck_name ?? ''}</td>
+      <td>${item.capacity ?? '—'}</td>
+      <td>${item.status ?? '—'}</td>
+      <td>${item.floor ?? '—'}</td>
+      <td><a href="{{ url('trucks') }}/${item.id}/status-log" class="btn btn-sm btn-outline-info">Log</a></td>
+      <td class="text-end">
+        <a href="{{ url('trucks') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
+        <form action="{{ url('trucks') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa xe?')">
+        @csrf @method('DELETE')
+        <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
+        </form>
+      </td>`;
+      return tr;
       }
       });
     });
     });
-  </script>
+    </script>
 @endpush

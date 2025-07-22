@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * App\Models\Truck
@@ -15,13 +17,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $floor
  * @property int|null $capacity
  * @property string|null $description
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Driver[] $drivers
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ScheduleTruck[] $scheduleTrucks
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\TruckStatus[] $statuses
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\TruckStatusLog[] $statusLogs
+ * @property-read \Illuminate\Database\Eloquent\Collection|Driver[] $drivers
+ * @property-read \Illuminate\Database\Eloquent\Collection|ScheduleTruck[] $scheduleTrucks
+ * @property-read \Illuminate\Database\Eloquent\Collection|TruckStatus[] $statuses
+ * @property-read \Illuminate\Database\Eloquent\Collection|TruckStatusLog[] $statusLogs
  */
 class Truck extends Model
 {
@@ -36,69 +35,46 @@ class Truck extends Model
         'description',
     ];
 
-    /* -------------------------------------------------
-     | Relationships
-     |------------------------------------------------- */
+    // Relationships
 
-    /**
-     * Các tài xế đang được gán cho xe này (1 xe có nhiều tài xế).
-     */
-    public function drivers()
+    public function drivers(): HasMany
     {
-        return $this->hasMany(Driver::class);
+        return $this->hasMany(Driver::class, 'truck_id');
     }
 
-    /**
-     * Lịch trình có liên quan tới xe này qua bảng schedule_trucks.
-     */
-    public function scheduleTrucks()
+    public function scheduleTrucks(): HasMany
     {
-        return $this->hasMany(ScheduleTruck::class);
+        return $this->hasMany(ScheduleTruck::class, 'truck_id');
     }
 
-    /**
-     * Các trạng thái của xe (mối quan hệ nhiều-nhiều) thông qua truck_status_logs.
-     * Pivot chứa: date, time_unit.
-     */
-    public function statuses()
+    public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(TruckStatus::class, 'truck_status_log', 'truck_id', 'status_id')
-                    ->withPivot(['date', 'time_unit'])
-                    ->withTimestamps();
+            ->withPivot(['date', 'time_unit'])
+            ->withTimestamps();
     }
 
-    /**
-     * Truy cập trực tiếp log trạng thái của xe.
-     */
-    public function statusLogs()
+    public function statusLogs(): HasMany
     {
-        return $this->hasMany(TruckStatusLog::class);
+        return $this->hasMany(TruckStatusLog::class, 'truck_id');
     }
 
-    /* -------------------------------------------------
-     | Query Scopes tiện dụng
-     |------------------------------------------------- */
+    public function schedules(): BelongsToMany
+    {
+        return $this->belongsToMany(Schedule::class, 'schedule_trucks')
+            ->withPivot(['driver_id', 'from_location_id', 'to_location_id', 'assistant', 'cargo_desc'])
+            ->withTimestamps();
+    }
 
-    /**
-     * Lọc xe đang hoạt động (không bảo trì).
-     */
+    // Query Scopes
+
     public function scopeActive($query)
     {
         return $query->where('status', '!=', 'bảo trì')->orWhereNull('status');
     }
 
-    /**
-     * Lọc xe theo tải trọng lớn hơn hoặc bằng.
-     */
     public function scopeCapacityAtLeast($query, $minCapacity)
     {
         return $query->where('capacity', '>=', $minCapacity);
-    }
-
-    public function schedules()
-    {
-        return $this->belongsToMany(Schedule::class, 'schedule_trucks')
-                    ->withPivot(['driver_id', 'from_location_id', 'to_location_id', 'assistant', 'cargo_desc'])
-                    ->withTimestamps();
     }
 }

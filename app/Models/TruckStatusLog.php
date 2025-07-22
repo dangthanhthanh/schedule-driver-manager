@@ -4,21 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Lịch sử trạng thái xe tải.
- *
- * @property int $id
- * @property int $truck_id
- * @property int $status_id
- * @property \Illuminate\Support\Carbon $date
- * @property float $time_unit
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @property-read \App\Models\Truck $truck
- * @property-read \App\Models\TruckStatus $status
- */
 class TruckStatusLog extends Model
 {
     use HasFactory;
@@ -37,19 +24,19 @@ class TruckStatusLog extends Model
         'time_unit' => 'float',
     ];
 
-    /* ---------------- Relationships ---------------- */
+    // Relationships
 
-    public function truck()
+    public function truck(): BelongsTo
     {
-        return $this->belongsTo(Truck::class);
+        return $this->belongsTo(Truck::class, 'truck_id');
     }
 
-    public function status()
+    public function status(): BelongsTo
     {
         return $this->belongsTo(TruckStatus::class, 'status_id');
     }
 
-    /* ---------------- Scopes ---------------- */
+    // Scopes
 
     public function scopeOnDate($query, $date)
     {

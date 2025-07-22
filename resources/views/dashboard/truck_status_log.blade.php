@@ -144,16 +144,16 @@
       const truckName = item.truck?.truck_name ?? '—';
       tr.innerHTML += `<td>${truckName}</td>`;
       @endunless
-          const color = item.status?.color ?? '#999';
+        const color = item.status?.color ?? '#999';
         const statusName = item.status?.name ?? '—';
         const date = item.date ?? '';
         const timeUnit = item.time_unit ?? '';
         const created = item.created_at ?? '';
         tr.innerHTML += `
-            <td><span class="badge" style="background-color:${color}">${statusName}</span></td>
-            <td>${date}</td>
-            <td>${timeUnit}</td>
-            <td class="text-end text-muted small">${created}</td>`;
+        <td><span class="badge" style="background-color:${color}">${statusName}</span></td>
+        <td>${date}</td>
+        <td>${timeUnit}</td>
+        <td class="text-end text-muted small">${created}</td>`;
         return tr;
       }
       });

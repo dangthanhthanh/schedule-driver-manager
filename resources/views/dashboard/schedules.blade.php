@@ -88,19 +88,19 @@
         const count = item.schedule_trucks_count ?? (item.schedule_trucks ? item.schedule_trucks.length : '');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.title ?? '—'}</td>
-            <td>${date}</td>
-            <td>${count}</td>
-            <td>${note}</td>
-            <td class="text-end">
-              <a href="{{ url('schedules') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
-              <form action="{{ url('schedules') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa lịch?')">
-                @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
-              </form>
-              <a href="{{ url('schedules') }}/${item.id}/trucks" class="btn btn-sm btn-outline-info">Xe</a>
-            </td>`;
+        <td>${item.id}</td>
+        <td>${item.title ?? '—'}</td>
+        <td>${date}</td>
+        <td>${count}</td>
+        <td>${note}</td>
+        <td class="text-end">
+          <a href="{{ url('schedules') }}/${item.id}/edit" class="btn btn-sm btn-outline-warning">Sửa</a>
+          <form action="{{ url('schedules') }}/${item.id}" method="POST" class="d-inline" onsubmit="return confirm('Xóa lịch?')">
+          @csrf @method('DELETE')
+          <button class="btn btn-sm btn-outline-danger submit-once">Xóa</button>
+          </form>
+          <a href="{{ url('schedules') }}/${item.id}/trucks" class="btn btn-sm btn-outline-info">Xe</a>
+        </td>`;
         return tr;
       }
       });

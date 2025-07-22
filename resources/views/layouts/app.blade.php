@@ -2,235 +2,167 @@
 <html lang="vi" data-bs-theme="light">
 
 <head>
- <meta charset="utf-8">
- <title>{{ $title ?? 'Dashboard' }} - {{ config('app.name', 'TruckDriver') }}</title>
- <meta name="viewport" content="width=device-width, initial-scale=1">
- <meta name="csrf-token" content="{{ csrf_token() }}">
- {{-- Bootstrap --}}
- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <meta charset="utf-8">
+  <title>{{ $title ?? 'Dashboard' }} - {{ config('app.name', 'TruckDriver') }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
 
- <style>
-  body.app-layout {
-   display: flex;
-   min-height: 100vh;
-   font-family: system-ui, Roboto, Arial, sans-serif;
-  }
+    body.app-layout {
+      min-height: 100vh;
+      max-width: 100;
+      display: flex;
+      flex-direction: row;
+    }
 
-  /* Sidebar base */
-  .app-sidebar {
-   width: 240px;
-   max-width: 80%;
-   background-color: var(--bs-dark-bg-subtle);
-   padding: 1rem;
-   transition: transform .2s ease, width .2s ease;
-   overflow-y: auto;
-   z-index: 1040;
-  }
+    .app-sidebar {
+      width: 70px;
+      position: fixed;
+      background: var(--bs-dark-bg-subtle);
+      padding: 1rem 0;
+      overflow-y: auto;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 1040;
+      box-shadow: 0 0 10px rgba(0, 0, 0, .03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-  /* Collapsed (desktop + mobile) */
-  .sidebar-collapsed .app-sidebar {
-   transform: translateX(-100%);
-  }
+    .app-sidebar h4 {
+      display: none;
+    }
 
-  /* Main area */
-  .app-main-container {
-   flex: 1;
-   padding: 1.5rem;
-   transition: margin-left .2s ease;
-  }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-  /* Desktop push layout (when expanded) */
-  @media (min-width: 768px) {
-   body.app-layout:not(.sidebar-collapsed) .app-main-container {
-    margin-left: 0;
-    /* we are flex, no need offset */
-   }
-  }
+    .sidebar-nav .nav-link {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: .25rem;
+      color: var(--bs-body-color);
+      font-size: 1.5em;
+      transition: background .18s, color .18s;
+    }
 
-  /* Mobile: sidebar overlays */
-  @media (max-width: 767.98px) {
-   .app-sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-   }
+    .sidebar-nav .nav-link.active {
+      color: var(--bs-primary);
+      background: var(--bs-primary-bg-subtle);
+    }
 
-   .app-main-backdrop {
-    display: none;
-   }
+    .sidebar-nav .nav-link .sidebar-text {
+      display: none !important;
+    }
 
-   body.app-layout:not(.sidebar-collapsed) .app-main-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .4);
-    z-index: 1039;
-   }
-  }
+    .theme-toggle-btn {
+      cursor: pointer;
+      margin-top: 2rem;
+      font-size: 1.4em;
+    }
 
-  .app-sidebar .nav-link {
-   color: var(--bs-body-color);
-   text-decoration: none;
-   padding: .35rem 0;
-  }
+    .app-main-container {
+      min-height: 100vh;
+      padding: 2rem 2vw 2rem 2vw;
+      width: 100%;
+      margin-left: 70px;
+    }
 
-  .app-sidebar .nav-link.active {
-   font-weight: 600;
-   color: var(--bs-primary);
-  }
+    @media (max-width: 767.98px) {
+      .app-sidebar {
+        width: 56px;
+      }
 
-  .theme-toggle-btn {
-   cursor: pointer;
-  }
-
-  button:disabled {
-   opacity: 0.6;
-   cursor: not-allowed;
-  }
- </style>
-
- @stack('head')
+      .app-main-container {
+        margin-left: 56px;
+        padding: 1rem 1vw;
+      }
+    }
+  </style>
+  @stack('head')
 </head>
 
-<body class="app-layout sidebar-collapsed">
-
- {{-- SIDEBAR --}}
- <aside id="sidebar" class="app-sidebar">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-   <h4 class="m-0">🚛 {{ config('app.name', 'TruckDriver') }}</h4>
-   <button type="button" id="sidebar-close" class="btn btn-sm btn-outline-secondary d-md-none">✕</button>
+<body class="app-layout">
+  <aside id="sidebar" class="app-sidebar" tabindex="0">
+    <nav class="sidebar-nav">
+      <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+        <i class="bi bi-house-door"></i>
+      </a>
+      <a class="nav-link {{ request()->is('drivers*') ? 'active' : '' }}" href="{{ route('drivers.index') }}">
+        <i class="bi bi-person-badge"></i>
+      </a>
+      <a class="nav-link {{ request()->is('trucks*') ? 'active' : '' }}" href="{{ route('trucks.index') }}">
+        <i class="bi bi-truck"></i>
+      </a>
+      <a class="nav-link {{ request()->is('schedules*') ? 'active' : '' }}" href="{{ route('schedules.index') }}">
+        <i class="bi bi-calendar-week"></i>
+      </a>
+      <a class="nav-link {{ request()->is('locations*') ? 'active' : '' }}" href="{{ route('locations.index') }}">
+        <i class="bi bi-geo-alt"></i>
+      </a>
+      <a class="nav-link {{ request()->is('planning/drivers') ? 'active' : '' }}"
+        href="{{ route('planning.drivers') }}">
+        <i class="bi bi-people text-primary"></i>
+      </a>
+      <a class="nav-link {{ request()->is('planning/trucks') ? 'active' : '' }}" href="{{ route('planning.trucks') }}">
+        <i class="bi bi-truck-front text-success"></i>
+      </a>
+    </nav>
+    <button type="button" class="btn btn-outline-secondary theme-toggle-btn" id="header-theme-toggle"
+      title="Đổi giao diện">🌗</button>
+  </aside>
+  <div id="app-main" class="app-main-container">
+    <header class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="m-0 fs-4">{{ $title ?? '' }}</h2>
+    </header>
+    @include('dashboard.partials._alerts')
+    @yield('content')
   </div>
-
-  <nav class="nav flex-column mb-3">
-   <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-    href="{{ route('dashboard') }}">Dashboard</a>
-   <a class="nav-link {{ request()->is('drivers*') ? 'active' : '' }}" href="{{ route('drivers.index') }}">Tài xế</a>
-   <a class="nav-link {{ request()->is('trucks*') ? 'active' : '' }}" href="{{ route('trucks.index') }}">Xe tải</a>
-   <a class="nav-link {{ request()->is('schedules*') ? 'active' : '' }}" href="{{ route('schedules.index') }}">Lịch
-    trình</a>
-   <a class="nav-link {{ request()->is('locations*') ? 'active' : '' }}" href="{{ route('locations.index') }}">Địa
-    điểm</a>
-  </nav>
-
-  <hr>
- </aside>
-
- {{-- Mobile overlay backdrop when sidebar open --}}
- <div class="app-main-backdrop" id="sidebar-backdrop"></div>
-
- {{-- MAIN --}}
- <div id="app-main" class="app-main-container">
-  <header class="d-flex justify-content-between align-items-center mb-4">
-   <div class="d-flex align-items-center gap-2">
-    <button type="button" id="sidebar-toggle" class="btn btn-outline-secondary btn-sm"
-     aria-label="Toggle sidebar">☰</button>
-    <h2 class="m-0 fs-4">{{ $title ?? '' }}</h2>
-   </div>
-   <button type="button" class="btn btn-outline-secondary btn-sm theme-toggle-btn" id="header-theme-toggle">🌗</button>
-  </header>
-
-  @include('dashboard.partials._alerts')
-
-  @yield('content')
- </div>
-
- {{-- Bootstrap JS --}}
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
- <script>
-  /* ================================
-   * Theme Toggle (light/dark)
-   * ================================= */
-  (function () {
-   const html = document.documentElement;
-   const savedTheme = localStorage.getItem('theme') || 'light';
-   setTheme(savedTheme);
-
-   function setTheme(t) {
-    html.setAttribute('data-bs-theme', t);
-    localStorage.setItem('theme', t);
-   }
-   function toggleTheme() {
-    const cur = html.getAttribute('data-bs-theme');
-    setTheme(cur === 'light' ? 'dark' : 'light');
-   }
-   document.getElementById('sidebar-theme-toggle')?.addEventListener('click', toggleTheme);
-   document.getElementById('header-theme-toggle')?.addEventListener('click', toggleTheme);
-  })();
-
-
-  /* ================================
-   * Sidebar Collapse / Auto-hide
-   * ================================= */
-  (function () {
-   const body = document.body;
-   const sidebar = document.getElementById('sidebar');
-   const backdrop = document.getElementById('sidebar-backdrop');
-   const toggleBtn = document.getElementById('sidebar-toggle');
-   const closeBtn = document.getElementById('sidebar-close');
-
-   const STORAGE_KEY = 'sidebar-collapsed';
-
-   function setCollapsed(state) {
-    body.classList.toggle('sidebar-collapsed', state);
-    localStorage.setItem(STORAGE_KEY, state ? '1' : '0');
-   }
-
-   function getSavedCollapsed() {
-    return localStorage.getItem(STORAGE_KEY) === '1';
-   }
-
-   function autoInit() {
-    // Force collapsed on small screens; else load saved state
-    if (window.innerWidth < 768) {
-     setCollapsed(true);
-    } else {
-     setCollapsed(getSavedCollapsed());
-    }
-   }
-
-   // Toggle handlers
-   toggleBtn?.addEventListener('click', () => {
-    const collapsed = body.classList.contains('sidebar-collapsed');
-    setCollapsed(!collapsed);
-   });
-   closeBtn?.addEventListener('click', () => setCollapsed(true));
-   backdrop?.addEventListener('click', () => setCollapsed(true));
-
-   // Auto collapse after clicking a nav link (mobile)
-   sidebar?.querySelectorAll('a.nav-link').forEach(a => {
-    a.addEventListener('click', () => {
-     if (window.innerWidth < 768) setCollapsed(true);
-    });
-   });
-
-   // Resize watcher
-   window.addEventListener('resize', autoInit);
-
-   // Init on load
-   autoInit();
-  })();
-
-
-  /* ================================
-   * Submit-once buttons
-   * =================================
-   * Add class="submit-once" to any <button> in forms.
-   */
-  (function () {
-   document.addEventListener('submit', function (e) {
-    const form = e.target;
-    const btn = form.querySelector('.submit-once');
-    if (btn) {
-     btn.disabled = true;
-     btn.innerText = 'Đang lưu…';
-    }
-   }, true);
-  })();
- </script>
-
- @stack('scripts')
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Theme Toggle
+    (function () {
+      const html = document.documentElement;
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      setTheme(savedTheme);
+      function setTheme(t) {
+        html.setAttribute('data-bs-theme', t);
+        localStorage.setItem('theme', t);
+      }
+      function toggleTheme() {
+        const cur = html.getAttribute('data-bs-theme');
+        setTheme(cur === 'light' ? 'dark' : 'light');
+      }
+      document.getElementById('header-theme-toggle')?.addEventListener('click', toggleTheme);
+    })();
+    // Anti-double-submit
+    (function () {
+      document.addEventListener('submit', function (e) {
+        const form = e.target;
+        const btn = form.querySelector('.submit-once');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = 'Đang lưu…';
+        }
+      }, true);
+    })();
+  </script>
+  @stack('scripts')
 </body>
 
 </html>

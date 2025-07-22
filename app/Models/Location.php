@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
  * @property string $name
  * @property string|null $address
  * @property string|null $link
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class Location extends Model
 {
@@ -23,14 +22,14 @@ class Location extends Model
         'link',
     ];
 
-    /* ---------------- Relationships ---------------- */
+    // Relationships
 
-    public function fromScheduleTrucks()
+    public function fromScheduleTrucks(): HasMany
     {
         return $this->hasMany(ScheduleTruck::class, 'from_location_id');
     }
 
-    public function toScheduleTrucks()
+    public function toScheduleTrucks(): HasMany
     {
         return $this->hasMany(ScheduleTruck::class, 'to_location_id');
     }

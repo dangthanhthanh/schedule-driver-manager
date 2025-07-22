@@ -10,14 +10,22 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $driversCount   = Driver::count();
+        $trucksCount    = Truck::count();
+        $schedulesCount = Schedule::count();
+
+        $latestDrivers   = Driver::with('truck')->latest()->limit(10)->get();
+        $latestTrucks    = Truck::latest()->limit(10)->get();
+        $latestSchedules = Schedule::with('scheduleTrucks.truck', 'scheduleTrucks.driver')->latest()->limit(10)->get();
+
         return view('dashboard.index', [
-            'title' => 'Dashboard',
-            'driversCount' => Driver::count(),
-            'trucksCount' => Truck::count(),
-            'schedulesCount' => Schedule::count(),
-            'drivers' => Driver::with('truck')->latest()->limit(20)->get(),
-            'trucks' => Truck::latest()->limit(20)->get(),
-            'schedules' => Schedule::with('scheduleTrucks.truck', 'scheduleTrucks.driver')->latest()->limit(20)->get(),
+            'title'          => 'Dashboard',
+            'driversCount'   => $driversCount,
+            'trucksCount'    => $trucksCount,
+            'schedulesCount' => $schedulesCount,
+            'drivers'        => $latestDrivers,
+            'trucks'         => $latestTrucks,
+            'schedules'      => $latestSchedules,
         ]);
     }
 }
